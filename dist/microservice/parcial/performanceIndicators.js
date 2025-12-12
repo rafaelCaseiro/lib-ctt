@@ -1,89 +1,128 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const helper_1 = require("../../helper/helper");
-const AUTOPILOT_USE_GOAL = 75;
+const AUTOPILOT_USE_GOAL = 70;
 const AGRICULTURAL_EFFICIENCY_GOAL = 70;
-const formatPerformanceIndicatorsWorkFronts = (workFrontJourneyMap, workFrontJourneyTractorMap, workFrontEfficiencyMap, workFrontShiftInefficiencyMap, workFrontProductionMap, workFrontWeightMap, tonPerHourGoalByTractor) => {
-    const formattedWorkFronts = Object.entries(workFrontJourneyMap).map(([workFrontCode, workFrontJourney]) => {
-        const parsedWorkFrontCode = Number(workFrontCode);
-        const workFrontEfficiency = workFrontEfficiencyMap[parsedWorkFrontCode];
-        const workFrontShiftInefficiency = workFrontShiftInefficiencyMap[parsedWorkFrontCode];
-        const workFrontProduction = workFrontProductionMap[parsedWorkFrontCode];
-        const workFrontWeight = workFrontWeightMap[parsedWorkFrontCode];
-        const workFrontJourneyTractor = workFrontJourneyTractorMap[parsedWorkFrontCode];
-        const tonPerHour = workFrontProduction.tonPerHourmeterGoal;
-        const awaitingTransshipmentData = workFrontJourney?.eventsDetails?.find((event) => event.name === "Aguardando Transbordo" && event.type === "MANUAL");
-        const awaitingTransshipmentTime = (0, helper_1.hourToTime)(awaitingTransshipmentData?.totalTime || 0);
-        const trucksLackData = workFrontJourneyTractor?.eventsDetails?.find((event) => event.name === "Falta de Caminhão" && event.type === "MANUAL");
-        const trucksLackTotalTime = trucksLackData?.totalTime || 0;
-        const trucksLackTime = (0, helper_1.hourToTime)(trucksLackTotalTime);
-        const maneuversData = workFrontJourney?.eventsDetails?.find((event) => event.name === "Manobra" && event.type === "AUTOMATIC");
-        const maneuversTime = (0, helper_1.hourToTime)(maneuversData?.averageTime || 0);
-        const engineIdleTime = (0, helper_1.hourToTime)(workFrontJourney.engineIdle.time);
-        const unproductiveTotalTime = workFrontJourney.unproductive.time;
-        const unproductiveTime = (0, helper_1.hourToTime)(unproductiveTotalTime);
-        const maintenanceTimeInNumber = workFrontJourney.maintenance.time;
-        const maintenanceTime = (0, helper_1.hourToTime)(maintenanceTimeInNumber);
-        const loadingTime = (0, helper_1.hourToTime)(workFrontJourneyTractor.eventsDetails?.find((event) => event.name === "Carregando" && event.type === "AUTOMATIC")?.averageTime || 0);
-        const countLoadTime = workFrontJourneyTractor.eventsDetails?.find((event) => event.name === "Carregando" && event.type === "AUTOMATIC")?.totalCount || 0;
-        const autopilotUseValue = workFrontEfficiency.automaticPilot.usePilotAutomatic;
-        const autopilotUse = {
-            value: autopilotUseValue > 100 ? 100 : autopilotUseValue,
-            goal: AUTOPILOT_USE_GOAL,
-        };
-        const totalHourmeter = workFrontEfficiency.hourmeter.totalHourMeter;
-        const offenderTime = unproductiveTotalTime;
-        const ctOffenders = offenderTime * tonPerHour;
-        const tOffenders = trucksLackTotalTime * tonPerHourGoalByTractor;
-        const agriculturalEfficiency = {
-            value: workFrontEfficiency.elevator.utilization,
-            goal: AGRICULTURAL_EFFICIENCY_GOAL,
-        };
-        const zones = workFrontJourney.harvestAreas.map((area) => area.split("/")[0]);
-        const uniqueZones = Array.from(new Set(zones));
-        return {
-            workFrontCode: parsedWorkFrontCode,
-            trips: workFrontWeight.trips,
-            averageWeight: workFrontWeight.averageTripWeight,
-            trucksLack: trucksLackTime,
-            awaitingTransshipment: awaitingTransshipmentTime,
-            engineIdle: engineIdleTime,
-            autopilotUse,
-            unproductiveTime,
-            maintenanceTime,
-            ctOffenders: ctOffenders || 0,
-            tOffenders: tOffenders || 0,
-            agriculturalEfficiency,
-            maneuvers: maneuversTime,
-            zone: uniqueZones.join(" / "),
-            averageRadius: workFrontWeight.averageRadius || 0,
-            averageShiftInefficiency: workFrontShiftInefficiency,
-            totalHourmeter,
-            loadingTime,
-            countLoadTime: countLoadTime,
-        };
-    });
-    return formattedWorkFronts;
+const formatPerformanceIndicatorsWorkFronts = (
+  workFrontJourneyMap,
+  workFrontJourneyTractorMap,
+  workFrontEfficiencyMap,
+  workFrontShiftInefficiencyMap,
+  workFrontProductionMap,
+  workFrontWeightMap,
+  tonPerHourGoalByTractor
+) => {
+  const formattedWorkFronts = Object.entries(workFrontJourneyMap).map(
+    ([workFrontCode, workFrontJourney]) => {
+      const parsedWorkFrontCode = Number(workFrontCode);
+      const workFrontEfficiency = workFrontEfficiencyMap[parsedWorkFrontCode];
+      const workFrontShiftInefficiency =
+        workFrontShiftInefficiencyMap[parsedWorkFrontCode];
+      const workFrontProduction = workFrontProductionMap[parsedWorkFrontCode];
+      const workFrontWeight = workFrontWeightMap[parsedWorkFrontCode];
+      const workFrontJourneyTractor =
+        workFrontJourneyTractorMap[parsedWorkFrontCode];
+      const tonPerHour = workFrontProduction.tonPerHourmeterGoal;
+      const awaitingTransshipmentData = workFrontJourney?.eventsDetails?.find(
+        (event) =>
+          event.name === "Aguardando Transbordo" && event.type === "MANUAL"
+      );
+      const awaitingTransshipmentTime = (0, helper_1.hourToTime)(
+        awaitingTransshipmentData?.totalTime || 0
+      );
+      const trucksLackData = workFrontJourneyTractor?.eventsDetails?.find(
+        (event) => event.name === "Falta de Caminhão" && event.type === "MANUAL"
+      );
+      const trucksLackTotalTime = trucksLackData?.totalTime || 0;
+      const trucksLackTime = (0, helper_1.hourToTime)(trucksLackTotalTime);
+      const maneuversData = workFrontJourney?.eventsDetails?.find(
+        (event) => event.name === "Manobra" && event.type === "AUTOMATIC"
+      );
+      const maneuversTime = (0, helper_1.hourToTime)(
+        maneuversData?.averageTime || 0
+      );
+      const engineIdleTime = (0, helper_1.hourToTime)(
+        workFrontJourney.engineIdle.time
+      );
+      const unproductiveTotalTime = workFrontJourney.unproductive.time;
+      const unproductiveTime = (0, helper_1.hourToTime)(unproductiveTotalTime);
+      const maintenanceTimeInNumber = workFrontJourney.maintenance.time;
+      const maintenanceTime = (0, helper_1.hourToTime)(maintenanceTimeInNumber);
+      const loadingTime = (0, helper_1.hourToTime)(
+        workFrontJourneyTractor.eventsDetails?.find(
+          (event) => event.name === "Carregando" && event.type === "AUTOMATIC"
+        )?.averageTime || 0
+      );
+      const countLoadTime =
+        workFrontJourneyTractor.eventsDetails?.find(
+          (event) => event.name === "Carregando" && event.type === "AUTOMATIC"
+        )?.totalCount || 0;
+      const autopilotUseValue =
+        workFrontEfficiency.automaticPilot.usePilotAutomatic;
+      const autopilotUse = {
+        value: autopilotUseValue > 100 ? 100 : autopilotUseValue,
+        goal: AUTOPILOT_USE_GOAL,
+      };
+      const totalHourmeter = workFrontEfficiency.hourmeter.totalHourMeter;
+      const offenderTime = unproductiveTotalTime;
+      const ctOffenders = offenderTime * tonPerHour;
+      const tOffenders = trucksLackTotalTime * tonPerHourGoalByTractor;
+      const agriculturalEfficiency = {
+        value: workFrontEfficiency.elevator.utilization,
+        goal: AGRICULTURAL_EFFICIENCY_GOAL,
+      };
+      const zones = workFrontJourney.harvestAreas.map(
+        (area) => area.split("/")[0]
+      );
+      const uniqueZones = Array.from(new Set(zones));
+      return {
+        workFrontCode: parsedWorkFrontCode,
+        trips: workFrontWeight.trips,
+        averageWeight: workFrontWeight.averageTripWeight,
+        trucksLack: trucksLackTime,
+        awaitingTransshipment: awaitingTransshipmentTime,
+        engineIdle: engineIdleTime,
+        autopilotUse,
+        unproductiveTime,
+        maintenanceTime,
+        ctOffenders: ctOffenders || 0,
+        tOffenders: tOffenders || 0,
+        agriculturalEfficiency,
+        maneuvers: maneuversTime,
+        zone: uniqueZones.join(" / "),
+        averageRadius: workFrontWeight.averageRadius || 0,
+        averageShiftInefficiency: workFrontShiftInefficiency,
+        totalHourmeter,
+        loadingTime,
+        countLoadTime: countLoadTime,
+      };
+    }
+  );
+  return formattedWorkFronts;
 };
 const processSummaryData = (formattedWorkFronts) => {
-    const summary = [];
-    const totalCtOffenders = formattedWorkFronts.reduce((acc, workFront) => acc + workFront.ctOffenders, 0);
-    for (const workFront of formattedWorkFronts) {
-        const ctOffender = workFront.ctOffenders;
-        summary.push({
-            label: `Frente ${workFront.workFrontCode}`,
-            lostTons: ctOffender,
-            progress: ctOffender > 0
-                ? Number(((ctOffender / totalCtOffenders) * 100).toFixed(2))
-                : 0,
-        });
-    }
-    summary.unshift({
-        label: `Geral`,
-        lostTons: totalCtOffenders,
-        progress: 100,
+  const summary = [];
+  const totalCtOffenders = formattedWorkFronts.reduce(
+    (acc, workFront) => acc + workFront.ctOffenders,
+    0
+  );
+  for (const workFront of formattedWorkFronts) {
+    const ctOffender = workFront.ctOffenders;
+    summary.push({
+      label: `Frente ${workFront.workFrontCode}`,
+      lostTons: ctOffender,
+      progress:
+        ctOffender > 0
+          ? Number(((ctOffender / totalCtOffenders) * 100).toFixed(2))
+          : 0,
     });
-    return summary;
+  }
+  summary.unshift({
+    label: `Geral`,
+    lostTons: totalCtOffenders,
+    progress: 100,
+  });
+  return summary;
 };
 /**
  * GET the performance indicators by Front
@@ -93,19 +132,34 @@ const processSummaryData = (formattedWorkFronts) => {
  * @param workFrontProductionMap - Map of workFront productions received from the API production service.
  * @param workFrontWeightMap - Map of workFront weights received from the API weight service.
  */
-const createPerformanceIndicators = async (workFrontJourneyMap, workFrontJourneyTractorMap, workFrontEfficiencyMap, workFrontShiftInefficiencyMap, workFrontProductionMap, workFrontWeightMap, tonPerHourGoalByTractor) => {
-    try {
-        const formattedWorkFronts = formatPerformanceIndicatorsWorkFronts(workFrontJourneyMap, workFrontJourneyTractorMap, workFrontEfficiencyMap, workFrontShiftInefficiencyMap, workFrontProductionMap, workFrontWeightMap, tonPerHourGoalByTractor);
-        const summary = processSummaryData(formattedWorkFronts);
-        return {
-            workFronts: formattedWorkFronts,
-            summary,
-        };
-    }
-    catch (error) {
-        console.error("Ocorreu um erro:", error);
-        throw error;
-    }
+const createPerformanceIndicators = async (
+  workFrontJourneyMap,
+  workFrontJourneyTractorMap,
+  workFrontEfficiencyMap,
+  workFrontShiftInefficiencyMap,
+  workFrontProductionMap,
+  workFrontWeightMap,
+  tonPerHourGoalByTractor
+) => {
+  try {
+    const formattedWorkFronts = formatPerformanceIndicatorsWorkFronts(
+      workFrontJourneyMap,
+      workFrontJourneyTractorMap,
+      workFrontEfficiencyMap,
+      workFrontShiftInefficiencyMap,
+      workFrontProductionMap,
+      workFrontWeightMap,
+      tonPerHourGoalByTractor
+    );
+    const summary = processSummaryData(formattedWorkFronts);
+    return {
+      workFronts: formattedWorkFronts,
+      summary,
+    };
+  } catch (error) {
+    console.error("Ocorreu um erro:", error);
+    throw error;
+  }
 };
 exports.default = createPerformanceIndicators;
 //# sourceMappingURL=performanceIndicators.js.map
