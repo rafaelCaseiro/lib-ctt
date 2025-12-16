@@ -22,7 +22,7 @@ const formatPerformanceIndicatorsWorkFronts = (
   workFrontProductionMap: Record<number, GetProductionReturn>,
   workFrontWeightMap: Record<number, WorkFrontWeightReturn>,
   tonPerHourGoalByTractor: number,
-  workFrontTruckLackMap: Record<number, number>
+  workFrontTruckLackMap: Record<number, string>
 ): PerformanceIndicatorsWorkFront[] => {
   const formattedWorkFronts: PerformanceIndicatorsWorkFront[] = Object.entries(
     workFrontJourneyMap
@@ -52,7 +52,7 @@ const formatPerformanceIndicatorsWorkFronts = (
     );
     const trucksLackTotalTime = trucksLackData?.totalTime || 0;
     const trucksLackTime = workFrontTruckLackMap
-      ? hourToTime(workFrontTruckLackMap[parsedWorkFrontCode] || 0)
+      ? workFrontTruckLackMap[parsedWorkFrontCode] || "00:00:00"
       : hourToTime(trucksLackTotalTime);
 
     const maneuversData = workFrontJourney?.eventsDetails?.find(
@@ -180,7 +180,7 @@ const createPerformanceIndicators = async (
   workFrontProductionMap: Record<number, GetProductionReturn>,
   workFrontWeightMap: Record<number, WorkFrontWeightReturn>,
   tonPerHourGoalByTractor: number,
-  workFrontTruckLackMap: Record<number, number>
+  workFrontTruckLackMap: Record<number, string>
 ): Promise<CttPerformanceIndicators> => {
   try {
     const formattedWorkFronts = formatPerformanceIndicatorsWorkFronts(
