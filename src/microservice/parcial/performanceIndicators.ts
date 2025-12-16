@@ -21,7 +21,8 @@ const formatPerformanceIndicatorsWorkFronts = (
   workFrontShiftInefficiencyMap: Record<number, string>,
   workFrontProductionMap: Record<number, GetProductionReturn>,
   workFrontWeightMap: Record<number, WorkFrontWeightReturn>,
-  tonPerHourGoalByTractor: number
+  tonPerHourGoalByTractor: number,
+  workFrontTruckLackMap: Record<number, number>
 ): PerformanceIndicatorsWorkFront[] => {
   const formattedWorkFronts: PerformanceIndicatorsWorkFront[] = Object.entries(
     workFrontJourneyMap
@@ -50,7 +51,9 @@ const formatPerformanceIndicatorsWorkFronts = (
       (event) => event.name === "Falta de Caminhão" && event.type === "MANUAL"
     );
     const trucksLackTotalTime = trucksLackData?.totalTime || 0;
-    const trucksLackTime = hourToTime(trucksLackTotalTime);
+    const trucksLackTime = workFrontTruckLackMap
+      ? hourToTime(workFrontTruckLackMap[parsedWorkFrontCode] || 0)
+      : hourToTime(trucksLackTotalTime);
 
     const maneuversData = workFrontJourney?.eventsDetails?.find(
       (event) => event.name === "Manobra" && event.type === "AUTOMATIC"
@@ -85,7 +88,6 @@ const formatPerformanceIndicatorsWorkFronts = (
     };
 
     const totalHourmeter = workFrontEfficiency.hourmeter.totalHourMeter;
-
 
     const offenderTime = unproductiveTotalTime;
 
@@ -177,7 +179,8 @@ const createPerformanceIndicators = async (
   workFrontShiftInefficiencyMap: Record<number, string>,
   workFrontProductionMap: Record<number, GetProductionReturn>,
   workFrontWeightMap: Record<number, WorkFrontWeightReturn>,
-  tonPerHourGoalByTractor: number
+  tonPerHourGoalByTractor: number,
+  workFrontTruckLackMap: Record<number, number>
 ): Promise<CttPerformanceIndicators> => {
   try {
     const formattedWorkFronts = formatPerformanceIndicatorsWorkFronts(
@@ -187,7 +190,8 @@ const createPerformanceIndicators = async (
       workFrontShiftInefficiencyMap,
       workFrontProductionMap,
       workFrontWeightMap,
-      tonPerHourGoalByTractor
+      tonPerHourGoalByTractor,
+      workFrontTruckLackMap
     );
 
     const summary = processSummaryData(formattedWorkFronts);
